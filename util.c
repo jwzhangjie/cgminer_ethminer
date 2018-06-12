@@ -2918,17 +2918,18 @@ resend:
 	}
 
 	sockd = true;
-
-	if (recvd) {
-		/* Get rid of any crap lying around if we're resending */
-		clear_sock(pool);
-		sprintf(s, "{\"id\": %d, \"method\": \"mining.subscribe\", \"params\": []}", swork_id++);
-	} else {
-		if (pool->sessionid)
-			sprintf(s, "{\"id\": %d, \"method\": \"mining.subscribe\", \"params\": [\""PACKAGE"/"VERSION""STRATUM_USER_AGENT"\", \"%s\"]}", swork_id++, pool->sessionid);
-		else
-			sprintf(s, "{\"id\": %d, \"method\": \"mining.subscribe\", \"params\": [\""PACKAGE"/"VERSION""STRATUM_USER_AGENT"\"]}", swork_id++);
-	}
+	sprintf(s, "{\"id\": %d, \"worker\": \"miner\", \"method\": \"eth_submitLogin\", \"params\": [\"%s\"]}", swork_id++, pool->rpc_user);
+	// sprintf(s, "{\"id\": %d, \"worker\": \"miner\", \"method\": \"eth_submitLogin\", \"params\": [\"0x236D21FD8369284e55ab8B97F088A351ed842ccc\"]}", swork_id++);
+	// if (recvd) {
+	// 	/* Get rid of any crap lying around if we're resending */
+	// 	clear_sock(pool);
+	// 	sprintf(s, "{\"id\": %d, \"method\": \"mining.subscribe\", \"params\": []}", swork_id++);
+	// } else {
+	// 	if (pool->sessionid)
+	// 		sprintf(s, "{\"id\": %d, \"method\": \"mining.subscribe\", \"params\": [\""PACKAGE"/"VERSION""STRATUM_USER_AGENT"\", \"%s\"]}", swork_id++, pool->sessionid);
+	// 	else
+	// 		sprintf(s, "{\"id\": %d, \"method\": \"mining.subscribe\", \"params\": [\""PACKAGE"/"VERSION""STRATUM_USER_AGENT"\"]}", swork_id++);
+	// }
 
 	if (__stratum_send(pool, s, strlen(s)) != SEND_OK) {
 		applog(LOG_DEBUG, "Failed to send s in initiate_stratum");
@@ -2972,45 +2973,45 @@ resend:
 		goto out;
 	}
 
-	sessionid = get_sessionid(res_val);
-	if (!sessionid)
-		applog(LOG_DEBUG, "Failed to get sessionid in initiate_stratum");
-	nonce1 = json_array_string(res_val, 1);
-	if (!valid_hex(nonce1)) {
-		applog(LOG_INFO, "Failed to get valid nonce1 in initiate_stratum");
-		free(sessionid);
-		free(nonce1);
-		goto out;
-	}
-	n2size = json_integer_value(json_array_get(res_val, 2));
-	if (n2size < 2 || n2size > 16) {
-		applog(LOG_INFO, "Failed to get valid n2size in initiate_stratum");
-		free(sessionid);
-		free(nonce1);
-		goto out;
-	}
+	// sessionid = get_sessionid(res_val);
+	// if (!sessionid)
+	// 	applog(LOG_DEBUG, "Failed to get sessionid in initiate_stratum");
+	// nonce1 = json_array_string(res_val, 1);
+	// if (!valid_hex(nonce1)) {
+	// 	applog(LOG_INFO, "Failed to get valid nonce1 in initiate_stratum");
+	// 	free(sessionid);
+	// 	free(nonce1);
+	// 	goto out;
+	// }
+	// n2size = json_integer_value(json_array_get(res_val, 2));
+	// if (n2size < 2 || n2size > 16) {
+	// 	applog(LOG_INFO, "Failed to get valid n2size in initiate_stratum");
+	// 	free(sessionid);
+	// 	free(nonce1);
+	// 	goto out;
+	// }
 
-	if (sessionid && pool->sessionid && !strcmp(sessionid, pool->sessionid)) {
-		applog(LOG_NOTICE, "Pool %d successfully negotiated resume with the same session ID",
-		       pool->pool_no);
-	}
+	// if (sessionid && pool->sessionid && !strcmp(sessionid, pool->sessionid)) {
+	// 	applog(LOG_NOTICE, "Pool %d successfully negotiated resume with the same session ID",
+	// 	       pool->pool_no);
+	// }
 
-	cg_wlock(&pool->data_lock);
-	tmp = pool->sessionid;
-	pool->sessionid = sessionid;
-	free(tmp);
-	tmp = pool->nonce1;
-	pool->nonce1 = nonce1;
-	free(tmp);
-	pool->n1_len = strlen(nonce1) / 2;
-	free(pool->nonce1bin);
-	pool->nonce1bin = cgcalloc(pool->n1_len, 1);
-	hex2bin(pool->nonce1bin, pool->nonce1, pool->n1_len);
-	pool->n2size = n2size;
-	cg_wunlock(&pool->data_lock);
+	// cg_wlock(&pool->data_lock);
+	// tmp = pool->sessionid;
+	// pool->sessionid = sessionid;
+	// free(tmp);
+	// tmp = pool->nonce1;
+	// pool->nonce1 = nonce1;
+	// free(tmp);
+	// pool->n1_len = strlen(nonce1) / 2;
+	// free(pool->nonce1bin);
+	// pool->nonce1bin = cgcalloc(pool->n1_len, 1);
+	// hex2bin(pool->nonce1bin, pool->nonce1, pool->n1_len);
+	// pool->n2size = n2size;
+	// cg_wunlock(&pool->data_lock);
 
-	if (sessionid)
-		applog(LOG_DEBUG, "Pool %d stratum session id: %s", pool->pool_no, pool->sessionid);
+	// if (sessionid)
+	// 	applog(LOG_DEBUG, "Pool %d stratum session id: %s", pool->pool_no, pool->sessionid);
 
 	ret = true;
 out:
