@@ -2439,9 +2439,8 @@ bool auth_stratum(struct pool *pool)
 	json_error_t err;
 	bool ret = false;
 
-	sprintf(s, "{\"id\": %d, \"method\": \"mining.authorize\", \"params\": [\"%s\", \"%s\"]}",
-		swork_id++, pool->rpc_user, pool->rpc_pass);
-
+	// sprintf(s, "{\"id\": %d, \"method\": \"mining.authorize\", \"params\": [\"%s\", \"%s\"]}",swork_id++, pool->rpc_user, pool->rpc_pass);
+	sprintf(s, "{\"id\": %d, \"method\": \"eth_getWork\",\"params\":[]}", swork_id++);
 	if (!stratum_send(pool, s, strlen(s)))
 		return ret;
 
