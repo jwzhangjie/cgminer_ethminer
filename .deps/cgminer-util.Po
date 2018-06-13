@@ -93,7 +93,7 @@ cgminer-util.o: util.c /usr/include/stdc-predef.h config.h \
  /usr/include/x86_64-linux-gnu/bits/syslog.h util.h \
  /usr/include/semaphore.h /usr/include/x86_64-linux-gnu/bits/semaphore.h \
  /usr/include/arpa/inet.h /usr/include/libusb-1.0/libusb.h usbutils.h \
- compat.h libssplus.h
+ compat.h libssplus.h sha3.h compiler.h data_sizes.h
 
 /usr/include/stdc-predef.h:
 
@@ -372,3 +372,9 @@ usbutils.h:
 compat.h:
 
 libssplus.h:
+
+sha3.h:
+
+compiler.h:
+
+data_sizes.h:

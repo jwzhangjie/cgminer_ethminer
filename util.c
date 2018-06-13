@@ -67,6 +67,9 @@ uint64_t ethash_get_cachesize(uint64_t const block_number)
 	return cache_sizes[block_number / ETHASH_EPOCH_LENGTH];
 }
 
+//SHA3_512(nodes[0].bytes, (uint8_t*)seed, 32);
+// int sha3_##bits(uint8_t* out, size_t outlen,const uint8_t* in, size_t inlen)
+
 int no_yield(void)
 {
 	return 0;
@@ -1923,7 +1926,9 @@ char *recv_line(struct pool *pool)
 	}
 
 	buflen = strlen(pool->sockbuf);
-	applog(LOG_DEBUG, "pool->sockbuf  %s", pool->sockbuf);
+	applog(LOG_DEBUG, """pool->sockbuf  %s", pool->sockbuf);
+	// SHA3_512("1111".bytes, (uint8_t*)1221, 32);
+	//ethminer
 	tok = strtok(pool->sockbuf, "\n");
 	if (!tok) {
 		applog(LOG_DEBUG, "Failed to parse a \\n terminated string in recv_line");
@@ -2943,7 +2948,7 @@ resend:
 	// 	else
 	// 		sprintf(s, "{\"id\": %d, \"method\": \"mining.subscribe\", \"params\": [\""PACKAGE"/"VERSION""STRATUM_USER_AGENT"\"]}", swork_id++);
 	// }
-
+	applog(LOG_DEBUG, "initiate_stratum  %s", s);
 	if (__stratum_send(pool, s, strlen(s)) != SEND_OK) {
 		applog(LOG_DEBUG, "Failed to send s in initiate_stratum");
 		goto out;
@@ -2959,7 +2964,7 @@ resend:
 		goto out;
 
 	recvd = true;
-
+	applog(LOG_DEBUG, "initiate_stratum response %s", sret);
 	val = JSON_LOADS(sret, &err);
 	free(sret);
 	if (!val) {
