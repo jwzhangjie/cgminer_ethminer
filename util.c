@@ -45,6 +45,8 @@
 #include "compat.h"
 #include "util.h"
 #include "libssplus.h"
+#include "sha3.h"
+#include "data_sizes.h"
 
 #ifdef USE_AVALON7
 #include "driver-avalon7.h"
@@ -55,7 +57,15 @@
 #define STRATUM_USER_AGENT
 #endif
 
+#define ETHASH_EPOCH_LENGTH 30000U
+
 bool successful_connect = false;
+
+uint64_t ethash_get_cachesize(uint64_t const block_number)
+{
+	// assert(block_number / ETHASH_EPOCH_LENGTH < 2048);
+	return cache_sizes[block_number / ETHASH_EPOCH_LENGTH];
+}
 
 int no_yield(void)
 {
@@ -1913,6 +1923,7 @@ char *recv_line(struct pool *pool)
 	}
 
 	buflen = strlen(pool->sockbuf);
+	applog(LOG_DEBUG, "pool->sockbuf  %s", pool->sockbuf);
 	tok = strtok(pool->sockbuf, "\n");
 	if (!tok) {
 		applog(LOG_DEBUG, "Failed to parse a \\n terminated string in recv_line");
@@ -2363,7 +2374,7 @@ bool parse_method(struct pool *pool, char *s)
 
 	if (!s)
 		goto out;
-
+	applog(LOG_INFO, "parse_method  %s",s);
 	val = JSON_LOADS(s, &err);
 	if (!val) {
 		applog(LOG_INFO, "JSON decode failed(%d): %s", err.line, err.text);
@@ -2371,10 +2382,13 @@ bool parse_method(struct pool *pool, char *s)
 	}
 
 	method = json_object_get(val, "method");
-	if (!method)
-		goto out_decref;
+	if (!method){
+		params = json_object_get(val, "result");
+	}else{
+		params = json_object_get(val, "params");
+	}
 	err_val = json_object_get(val, "error");
-	params = json_object_get(val, "params");
+	// params = json_object_get(val, "params");
 
 	if (err_val && !json_is_null(err_val)) {
 		char *ss;
@@ -2389,43 +2403,43 @@ bool parse_method(struct pool *pool, char *s)
 		goto out_decref;
 	}
 
-	buf = (char *)json_string_value(method);
-	if (!buf)
-		goto out_decref;
+	// buf = (char *)json_string_value(method);
+	// if (!buf)
+	// 	goto out_decref;
 
-	if (!strncasecmp(buf, "mining.notify", 13)) {
-		if (parse_notify(pool, params))
-			pool->stratum_notify = ret = true;
-		else
-			pool->stratum_notify = ret = false;
-		goto out_decref;
-	}
+	// if (!strncasecmp(buf, "mining.notify", 13)) {
+	// 	if (parse_notify(pool, params))
+	// 		pool->stratum_notify = ret = true;
+	// 	else
+	// 		pool->stratum_notify = ret = false;
+	// 	goto out_decref;
+	// }
 
-	if (!strncasecmp(buf, "mining.set_difficulty", 21)) {
-		ret = parse_diff(pool, params);
-		goto out_decref;
-	}
+	// if (!strncasecmp(buf, "mining.set_difficulty", 21)) {
+	// 	ret = parse_diff(pool, params);
+	// 	goto out_decref;
+	// }
 
-	if (!strncasecmp(buf, "client.reconnect", 16)) {
-		ret = parse_reconnect(pool, params);
-		goto out_decref;
-	}
+	// if (!strncasecmp(buf, "client.reconnect", 16)) {
+	// 	ret = parse_reconnect(pool, params);
+	// 	goto out_decref;
+	// }
 
-	if (!strncasecmp(buf, "client.get_version", 18)) {
-		ret =  send_version(pool, val);
-		goto out_decref;
-	}
+	// if (!strncasecmp(buf, "client.get_version", 18)) {
+	// 	ret =  send_version(pool, val);
+	// 	goto out_decref;
+	// }
 
-	if (!strncasecmp(buf, "client.show_message", 19)) {
-		ret = show_message(pool, params);
-		goto out_decref;
-	}
+	// if (!strncasecmp(buf, "client.show_message", 19)) {
+	// 	ret = show_message(pool, params);
+	// 	goto out_decref;
+	// }
 
-	if (!strncasecmp(buf, "mining.ping", 11)) {
-		applog(LOG_INFO, "Pool %d ping", pool->pool_no);
-		ret = send_pong(pool, val);
-		goto out_decref;
-	}
+	// if (!strncasecmp(buf, "mining.ping", 11)) {
+	// 	applog(LOG_INFO, "Pool %d ping", pool->pool_no);
+	// 	ret = send_pong(pool, val);
+	// 	goto out_decref;
+	// }
 out_decref:
 	json_decref(val);
 out:
@@ -2449,10 +2463,10 @@ bool auth_stratum(struct pool *pool)
 		sret = recv_line(pool);
 		if (!sret)
 			return ret;
-		if (parse_method(pool, sret))
-			free(sret);
-		else
-			break;
+		// if (parse_method(pool, sret))
+		// 	free(sret);
+		// else
+		// 	break;
 	}
 
 	val = JSON_LOADS(sret, &err);
